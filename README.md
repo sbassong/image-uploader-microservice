@@ -109,3 +109,6 @@ If the file is successfully validated and uploaded, the service will return a JS
     npm start
     ```
     The service will be running on `http://localhost:3001`.
+
+## UML Sequence Diagram
+<img src="./UML_sequence_diagram.png" />

@@ -1,6 +1,6 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const path = require('path');
-// const { validateFileSize, validateFileType } = require('./helpers.js'); // pending Gurveer
+const path = require("path");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { validateFileSize, validateFileType } = require("./helpers.js");
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -11,30 +11,26 @@ const s3Client = new S3Client({
 });
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
-
-async function validateImage(file) {
-  if (!file) {
-    return res.status(400).json({ message: 'No file was uploaded.' });
-  }
-
-  // const sizeError = validateFileSize(file);
-  // if (sizeError) {
-  //   return res.status(413).json({ message: sizeError.message });
-  // }
-
-  // const typeError = validateFileType(file);
-  // if (typeError) {
-  //   return res.status(415).json({ message: typeError.message });
-  // }
-} 
-
 async function uploadImage(req, res) {
   try {
-    await validateImage(req.file)
+    if (!req.file) {
+      return res.status(400).json({ message: "No file was uploaded." });
+    }
 
-    // above validation passed, so we can now upload to S3    
+    const sizeError = validateFileSize(req.file);
+    if (sizeError) {
+      return res.status(413).json({ message: sizeError.message });
+    }
+
+    const typeError = validateFileType(req.file);
+    console.log({ typeError });
+    if (typeError) {
+      return res.status(415).json({ message: typeError.message });
+    }
+
+    // above validation passed, so we can now upload to S3
     //create a unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const fileName = uniqueSuffix + path.extname(req.file.originalname);
 
     // create the command to send to S3
@@ -54,16 +50,15 @@ async function uploadImage(req, res) {
 
     res.status(201).json({
       success: true,
-      message: 'File uploaded successfully',
+      message: "File uploaded successfully",
       url: fileUrl,
     });
-    
   } catch (error) {
-    console.error('S3 Upload Error:', error);
-    res.status(500).json({ message: 'An error occurred during upload.' });
+    console.error("Upload Error:", error);
+    res.status(500).json({ message: "An error occurred during upload." });
   }
 }
 
 module.exports = {
-  uploadImage
-}
+  uploadImage,
+};

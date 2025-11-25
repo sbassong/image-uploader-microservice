@@ -1,6 +1,5 @@
-const path = require("path");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const { validateFileSize, validateFileType } = require("./helpers.js");
+const { validateFileSize, validateFileType, generateUniqueFilename } = require("./helpers.js");
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -11,26 +10,28 @@ const s3Client = new S3Client({
 });
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
+async function validateImageFile(file) {
+  const sizeError = validateFileSize(file);
+  const typeError = validateFileType(file);
+
+  if (!file) {
+    return { message: "No file was uploaded.", status: 400 };
+  } else if (sizeError) {
+    return { message: sizeError.message, status: 413 };
+  } else if (typeError) {
+    return { message: typeError.message, status: 415 };
+  } else return null;
+};
+
 async function uploadImage(req, res) {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file was uploaded." });
+    const isInvalidFile = await validateImageFile(req.file)
+
+    if (isInvalidFile) {
+      return res.status(isInvalidFile.status).json({ message: isInvalidFile.message });
     }
 
-    const sizeError = validateFileSize(req.file);
-    if (sizeError) {
-      return res.status(413).json({ message: sizeError.message });
-    }
-
-    const typeError = validateFileType(req.file);
-    if (typeError) {
-      return res.status(415).json({ message: typeError.message });
-    }
-
-    // above validation passed, so we can now upload to S3
-    //create a unique filename
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const fileName = uniqueSuffix + path.extname(req.file.originalname);
+    const fileName = generateUniqueFilename(req.file.originalname);
 
     // create the command to send to S3
     const s3Params = {

@@ -1,3 +1,4 @@
+const path = require("path");
 const VALID_FILES_TYPES = ["image/png", "image/jpeg"];
 const ALLOWED_FILE_SIZE = 1024 * 1024 * 5; // 5MB
 
@@ -13,7 +14,13 @@ const validateFileSize = (file) => {
   return null;
 };
 
+const generateUniqueFilename = (originalName) => {
+  const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  return uniqueSuffix + path.extname(originalName);
+};
+
 module.exports = {
   validateFileSize,
   validateFileType,
+  generateUniqueFilename,
 };

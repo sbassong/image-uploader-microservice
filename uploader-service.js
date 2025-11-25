@@ -23,7 +23,6 @@ async function uploadImage(req, res) {
     }
 
     const typeError = validateFileType(req.file);
-    console.log({ typeError });
     if (typeError) {
       return res.status(415).json({ message: typeError.message });
     }

@@ -18,7 +18,6 @@ const upload = multer({
   storage: memoryStorage,
 });
 
-//upload.single runs first. if successful, req.file is available
 app.post('/upload', upload.single('image'), uploadImage);
 
 
